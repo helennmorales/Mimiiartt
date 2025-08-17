@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// URLs 'Raw' de tus Gists. ¡Ya están listas!
+// URLs 'Raw' de tus Gists
 const TOPPERS_URL = 'https://gist.githubusercontent.com/helennmorales/b196b0fff51e71faf7d6b7dbbec69d03/raw/29b4bfb46a007f41437bc119230dc92c2351b00a/toppers.json';
 const CUPCAKES_URL = 'https://gist.githubusercontent.com/helennmorales/55fce4911fb8ba90c24ba554304cc3c6/raw/33ba438b1d7b0243dbf5088d8c9e481472e76d16/cupcakes.json';
 
