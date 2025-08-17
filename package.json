@@ -1,13 +1,18 @@
 {
   "name": "mimi-art-server",
   "version": "1.0.0",
-  "description": "API para Mimi Art",
+  "description": "API para Mimi Art con MongoDB",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "mongoose": "^7.6.1",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "axios": "^1.7.7"
   }
 }
+
