@@ -1,79 +1,124 @@
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const axios = require("axios");
 
 const app = express();
 const port = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || "clave-secreta";
+
+// Conectar a MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("✅ Conectado a MongoDB Atlas"))
+.catch(err => console.error("❌ Error MongoDB:", err.message));
 
 app.use(cors());
 app.use(express.json());
 
-// URLs 'Raw' de tus Gists. ¡Ya están todas listas!
-const TOPPERS_URL = 'https://gist.githubusercontent.com/helennmorales/b196b0fff51e71faf7d6b7dbbec69d03/raw/29b4bfb46a007f41437bc119230dc92c2351b00a/toppers.json';
-const CUPCAKES_URL = 'https://gist.githubusercontent.com/helennmorales/55fce4911fb8ba90c24ba554304cc3c6/raw/33ba438b1d7b0243dbf5088d8c9e481472e76d16/cupcakes.json';
-const USERS_URL = 'https://gist.githubusercontent.com/helennmorales/cf84761a6db17fe0ddafb488820b4e61/raw/65426b5ec9f8b1c0484e55609b08c512701e68c3/users.json';
+// ====== Esquemas de MongoDB ======
+const userSchema = new mongoose.Schema({
+  username: { type: String, unique: true },
+  password: String,
+  userType: { type: String, enum: ["cliente", "vendedor"], default: "cliente" }
+});
 
-async function fetchData(url) {
+const productSchema = new mongoose.Schema({
+  imageUrl: String,
+  price: Number,
+  category: { type: String, enum: ["toppers", "cupcakes"] }
+});
+
+const User = mongoose.model("User", userSchema);
+const Product = mongoose.model("Product", productSchema);
+
+// ====== Middleware auth ======
+function authMiddleware(req, res, next) {
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "No autenticado" });
+
   try {
-    const response = await axios.get(url);
-    return response.data;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
   } catch (error) {
-    console.error(`Error fetching data from ${url}:`, error.message);
-    throw new Error('Error al conectar con la base de datos.');
+    return res.status(403).json({ message: "Token inválido" });
   }
 }
 
-// NUEVO ENDPOINT PARA LAS IMÁGENES
-app.get('/api/image-proxy', async (req, res) => {
-  const imageUrl = req.query.url;
-  if (!imageUrl) {
-    return res.status(400).send('Falta la URL de la imagen.');
+// ====== Rutas de usuarios ======
+app.post("/api/register", async (req, res) => {
+  try {
+    const { username, password, userType } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({ username, password: hashedPassword, userType });
+    await newUser.save();
+
+    res.json({ user: { username, userType } });
+  } catch (error) {
+    res.status(400).json({ message: "Error al registrar usuario: " + error.message });
+  }
+});
+
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  const user = await User.findOne({ username });
+  if (!user) return res.status(400).json({ message: "Usuario no encontrado" });
+
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.status(400).json({ message: "Contraseña incorrecta" });
+
+  const token = jwt.sign({ id: user._id, username: user.username, userType: user.userType }, JWT_SECRET, { expiresIn: "2h" });
+
+  res.json({ token, user: { username: user.username, userType: user.userType } });
+});
+
+// ====== Rutas de productos ======
+app.get("/api/toppers", async (req, res) => {
+  const toppers = await Product.find({ category: "toppers" });
+  res.json(toppers);
+});
+
+app.get("/api/cupcakes", async (req, res) => {
+  const cupcakes = await Product.find({ category: "cupcakes" });
+  res.json(cupcakes);
+});
+
+// Solo vendedor puede agregar productos
+app.post("/api/products", authMiddleware, async (req, res) => {
+  if (req.user.userType !== "vendedor") {
+    return res.status(403).json({ message: "Solo vendedores pueden agregar productos" });
   }
 
+  const { imageUrl, price, category } = req.body;
+  const newProduct = new Product({ imageUrl, price, category });
+  await newProduct.save();
+
+  res.json({ message: "Producto agregado", product: newProduct });
+});
+
+// ====== Proxy para imágenes (Imgur) ======
+app.get("/api/image-proxy", async (req, res) => {
+  const imageUrl = req.query.url;
+  if (!imageUrl) return res.status(400).send("Falta la URL de la imagen.");
+
   try {
-    const response = await axios.get(imageUrl, { responseType: 'stream' });
+    const response = await axios.get(imageUrl, { responseType: "stream" });
     response.data.pipe(res);
   } catch (error) {
-    console.error('Error with image proxy:', error.message);
-    res.status(500).send('Error al cargar la imagen.');
+    console.error("Error con proxy de imagen:", error.message);
+    res.status(500).send("Error al cargar la imagen.");
   }
 });
 
-// ENDPOINTS para productos
-app.get('/api/toppers', async (req, res) => {
-  try {
-    const toppers = await fetchData(TOPPERS_URL);
-    res.json(toppers);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al cargar los toppers.' });
-  }
-});
-
-app.get('/api/cupcakes', async (req, res) => {
-  try {
-    const cupcakes = await fetchData(CUPCAKES_URL);
-    res.json(cupcakes);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al cargar los cupcakes.' });
-  }
-});
-
-// ENDPOINTS para usuarios
-app.post('/api/register', async (req, res) => {
-  // ... (código de registro, sin cambios)
-});
-
-app.post('/api/login', async (req, res) => {
-  // ... (código de inicio de sesión, sin cambios)
-});
-
-// Endpoints de tipo POST que no funcionan con Gist
-app.post('/api/toppers', (req, res) => {
-  res.status(501).json({ message: 'No se puede agregar toppers. La funcionalidad no está disponible con Gist.' });
-});
-
-app.post('/api/cupcakes', (req, res) => {
-  res.status(501).json({ message: 'No se puede agregar cupcakes. La funcionalidad no está disponible con Gist.' });
+app.listen(port, () => {
+  console.log(`🚀 Servidor escuchando en http://localhost:${port}`);
 });
 
 module.exports = app;
