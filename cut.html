@@ -135,10 +135,10 @@
         const productPriceInput = document.getElementById('productPrice');
         const cupcakesGallery = document.getElementById('cupcakesGallery');
 
-        // Función para cargar los cupcakes desde la API
         async function fetchCupcakes() {
             cupcakesGallery.innerHTML = '<p>Cargando cupcakes...</p>';
             try {
+                // Se usa la URL relativa, que Vercel dirigirá a tu server.js
                 const response = await fetch('/api/cupcakes');
                 if (!response.ok) {
                     throw new Error('Error al cargar los productos. Por favor, verifica la conexión.');
@@ -151,7 +151,6 @@
             }
         }
 
-        // Función para renderizar la galería
         function renderGallery(items) {
             if (items.length === 0) {
                 cupcakesGallery.innerHTML = '<p>No hay cupcakes disponibles.</p>';
@@ -169,7 +168,6 @@
             });
         }
 
-        // Lógica de inicio de sesión
         loginButton.addEventListener('click', () => {
             const password = prompt("Ingresa la contraseña de administrador:");
             if (password === "mimiiartt") {
@@ -181,42 +179,11 @@
             }
         });
 
-        // Lógica para agregar un nuevo producto
         addProductButton.addEventListener('click', async () => {
-            const imageUrl = imageUrlInput.value;
-            const price = productPriceInput.value;
-            if (!imageUrl || !price) {
-                alert("Por favor, llena ambos campos.");
-                return;
-            }
-
-            const newCupcake = { imageUrl, price };
-
-            try {
-                const response = await fetch('/api/cupcakes', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(newCupcake)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error al agregar el producto.');
-                }
-
-                alert("Producto agregado exitosamente.");
-                imageUrlInput.value = '';
-                productPriceInput.value = '';
-                fetchCupcakes(); // Recargar la galería
-            } catch (error) {
-                alert("Ocurrió un error al agregar el producto.");
-                console.error('Error adding cupcake:', error);
-            }
+            alert("La funcionalidad de agregar productos no está disponible con esta configuración. Para agregar productos, edita manualmente el Gist en GitHub.");
         });
 
-        // Cargar los cupcakes al inicio
         fetchCupcakes();
     </script>
 </body>
-	</html>
+</html>
