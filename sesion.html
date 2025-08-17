@@ -131,7 +131,7 @@
         <a href="index.html" class="back-btn">Volver a la página principal</a>
     </div>
     <script>
-        function login() {
+        async function login() {
             const username = document.getElementById('username').value.trim().toLowerCase();
             const password = document.getElementById('password').value.trim();
             const userType = document.getElementById('user-type').value;
@@ -141,10 +141,9 @@
                 return;
             }
 
-            // Lógica para el usuario vendedor único
+            // Lógica para el usuario vendedor único (ejemplo fijo)
             if (userType === 'vendedor') {
                 if (username === 'vendedor' && password === '123') {
-                    // Mantenemos sessionStorage para la sesión actual del vendedor
                     sessionStorage.setItem('username', 'Vendedor');
                     sessionStorage.setItem('userType', 'vendedor');
                     alert('¡Bienvenido, Vendedor!');
@@ -152,21 +151,36 @@
                 } else {
                     alert('Usuario o contraseña de vendedor incorrectos.');
                 }
-            } else { // Lógica para el cliente
-                const storedPassword = localStorage.getItem(`${username}_password`);
-                if (storedPassword && storedPassword === password) {
-                    // Mantenemos sessionStorage para la sesión actual del cliente
-                    sessionStorage.setItem('username', username);
-                    sessionStorage.setItem('userType', userType);
-                    alert(`¡Bienvenido, ${username}!`);
+                return;
+            }
+
+            // Lógica para el cliente, que ahora se comunica con el servidor
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    sessionStorage.setItem('username', data.user.username);
+                    sessionStorage.setItem('userType', data.user.userType);
+                    alert(`¡Bienvenido, ${data.user.username}!`);
                     window.location.href = `index.html`;
                 } else {
-                    alert('Usuario o contraseña de cliente incorrectos.');
+                    alert(data.message);
                 }
+            } catch (error) {
+                alert('Ocurrió un error al intentar iniciar sesión. Por favor, revisa la conexión.');
+                console.error('Error during login:', error);
             }
         }
 
-        function register() {
+        async function register() {
             const username = document.getElementById('username').value.trim().toLowerCase();
             const password = document.getElementById('password').value.trim();
             const userType = document.getElementById('user-type').value;
@@ -175,25 +189,36 @@
                 alert('Por favor, ingresa un nombre de usuario y una contraseña para registrarte.');
                 return;
             }
+
             if (userType === 'vendedor') {
                 alert('No se puede registrar como vendedor. Solo existe un usuario "Vendedor" predefinido.');
                 return;
             }
-            // Comprueba si el usuario ya existe en localStorage
-            if (localStorage.getItem(`${username}_password`)) {
-                alert('Este nombre de usuario ya está registrado. Por favor, elige otro.');
-                return;
-            }
 
-            // Guarda el nuevo usuario en el localStorage para que persista
-            localStorage.setItem(`${username}_password`, password);
-            
-            // Inicia la sesión inmediatamente después del registro
-            sessionStorage.setItem('username', username);
-            sessionStorage.setItem('userType', userType);
-            
-            alert(`✅ ¡Registro exitoso! Bienvenido, ${username}. Ahora puedes navegar como cliente.`);
-            window.location.href = `index.html`;
+            // La lógica de registro se comunica con el servidor
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, userType })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    sessionStorage.setItem('username', data.user.username);
+                    sessionStorage.setItem('userType', data.user.userType);
+                    alert(`✅ ¡Registro exitoso! Bienvenido, ${data.user.username}. Ahora puedes navegar como cliente.`);
+                    window.location.href = `index.html`;
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Ocurrió un error al registrarse. Por favor, revisa la conexión.');
+                console.error('Error during registration:', error);
+            }
         }
     </script>
 </body>
