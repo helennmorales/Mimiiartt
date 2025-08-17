@@ -10,9 +10,10 @@
         {
             "src": "/(.*)",
             "dest": "server.js"
+            git add .
+git commit -m "Agregando archivo vercel.json para configurar las rutas"
+git push
         }
     ]
 }
-git add .
-git commit -m "Agregando archivo vercel.json para configurar las rutas"
-git push
+
