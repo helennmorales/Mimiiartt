@@ -138,15 +138,14 @@
         async function fetchToppers() {
             toppersGallery.innerHTML = '<p>Cargando toppers...</p>';
             try {
-                // Se usa la URL relativa, que Vercel dirigirá a tu server.js
                 const response = await fetch('/api/toppers');
                 if (!response.ok) {
-                    throw new Error('Error al cargar los productos. Por favor, verifica la conexión.');
+                    throw new Error('Error al cargar los productos.');
                 }
                 const data = await response.json();
                 renderGallery(data);
             } catch (error) {
-                toppersGallery.innerHTML = `<p style="color: red;">Ocurrió un error al cargar los productos. Por favor, verifica la conexión.</p>`;
+                toppersGallery.innerHTML = `<p style="color: red;">Ocurrió un error al cargar los productos.</p>`;
                 console.error('Error fetching toppers:', error);
             }
         }
@@ -160,8 +159,10 @@
             items.forEach(item => {
                 const productItem = document.createElement('div');
                 productItem.className = 'product-item';
+                // Usamos el nuevo endpoint de proxy para cargar la imagen
+                const imageUrlProxy = `/api/image-proxy?url=${encodeURIComponent(item.imageUrl)}`;
                 productItem.innerHTML = `
-                    <img src="${item.imageUrl}" alt="Topper">
+                    <img src="${imageUrlProxy}" alt="Topper">
                     <p>Costo: ${item.price}</p>
                 `;
                 toppersGallery.appendChild(productItem);
