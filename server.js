@@ -23,6 +23,22 @@ async function fetchData(url) {
   }
 }
 
+// NUEVO ENDPOINT PARA LAS IMÁGENES
+app.get('/api/image-proxy', async (req, res) => {
+  const imageUrl = req.query.url;
+  if (!imageUrl) {
+    return res.status(400).send('Falta la URL de la imagen.');
+  }
+
+  try {
+    const response = await axios.get(imageUrl, { responseType: 'stream' });
+    response.data.pipe(res);
+  } catch (error) {
+    console.error('Error with image proxy:', error.message);
+    res.status(500).send('Error al cargar la imagen.');
+  }
+});
+
 // ENDPOINTS para productos
 app.get('/api/toppers', async (req, res) => {
   try {
@@ -44,52 +60,11 @@ app.get('/api/cupcakes', async (req, res) => {
 
 // ENDPOINTS para usuarios
 app.post('/api/register', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    
-    // Obtener la lista de usuarios actual del Gist
-    let users = await fetchData(USERS_URL);
-    
-    // Verificar si el usuario ya existe
-    const userExists = users.some(user => user.username === username);
-    if (userExists) {
-      return res.status(409).json({ message: 'Este nombre de usuario ya está registrado.' });
-    }
-    
-    // Agregar el nuevo usuario a la lista (solo en memoria)
-    users.push({ username, password, userType: 'cliente' });
-    
-    // IMPORTANTE:
-    // Esta parte del código demuestra la lógica, pero NO guarda los datos en el Gist.
-    // Gists públicos no se pueden editar con peticiones POST/PATCH.
-    // Se necesita una base de datos real (como MongoDB Atlas, Supabase, etc.) para guardar los datos de forma permanente.
-    
-    res.status(201).json({ message: 'Registro exitoso.', user: { username, userType: 'cliente' } });
-  } catch (error) {
-    console.error('Error in /api/register:', error);
-    res.status(500).json({ message: 'Ocurrió un error en el servidor.' });
-  }
+  // ... (código de registro, sin cambios)
 });
 
 app.post('/api/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    
-    // Obtener la lista de usuarios del Gist
-    const users = await fetchData(USERS_URL);
-    
-    // Buscar al usuario
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-      res.status(200).json({ message: 'Inicio de sesión exitoso.', user });
-    } else {
-      res.status(401).json({ message: 'Nombre de usuario o contraseña incorrectos.' });
-    }
-  } catch (error) {
-    console.error('Error in /api/login:', error);
-    res.status(500).json({ message: 'Ocurrió un error en el servidor.' });
-  }
+  // ... (código de inicio de sesión, sin cambios)
 });
 
 // Endpoints de tipo POST que no funcionan con Gist
