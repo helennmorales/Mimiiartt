@@ -135,10 +135,10 @@
         const productPriceInput = document.getElementById('productPrice');
         const toppersGallery = document.getElementById('toppersGallery');
 
-        // Función para cargar los toppers desde la API
         async function fetchToppers() {
             toppersGallery.innerHTML = '<p>Cargando toppers...</p>';
             try {
+                // Se usa la URL relativa, que Vercel dirigirá a tu server.js
                 const response = await fetch('/api/toppers');
                 if (!response.ok) {
                     throw new Error('Error al cargar los productos. Por favor, verifica la conexión.');
@@ -151,7 +151,6 @@
             }
         }
 
-        // Función para renderizar la galería
         function renderGallery(items) {
             if (items.length === 0) {
                 toppersGallery.innerHTML = '<p>No hay toppers disponibles.</p>';
@@ -169,7 +168,6 @@
             });
         }
 
-        // Lógica de inicio de sesión
         loginButton.addEventListener('click', () => {
             const password = prompt("Ingresa la contraseña de administrador:");
             if (password === "mimiiartt") {
@@ -181,41 +179,10 @@
             }
         });
 
-        // Lógica para agregar un nuevo producto
         addProductButton.addEventListener('click', async () => {
-            const imageUrl = imageUrlInput.value;
-            const price = productPriceInput.value;
-            if (!imageUrl || !price) {
-                alert("Por favor, llena ambos campos.");
-                return;
-            }
-
-            const newTopper = { imageUrl, price };
-
-            try {
-                const response = await fetch('/api/toppers', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(newTopper)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error al agregar el producto.');
-                }
-
-                alert("Producto agregado exitosamente.");
-                imageUrlInput.value = '';
-                productPriceInput.value = '';
-                fetchToppers(); // Recargar la galería
-            } catch (error) {
-                alert("Ocurrió un error al agregar el producto.");
-                console.error('Error adding topper:', error);
-            }
+            alert("La funcionalidad de agregar productos no está disponible con esta configuración. Para agregar productos, edita manualmente el Gist en GitHub.");
         });
 
-        // Cargar los toppers al inicio
         fetchToppers();
     </script>
 </body>
