@@ -1,225 +1,66 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión / Registrarse - Mimi Art</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #c27a96;
-            --secondary-color: #5e212f;
-            --accent-color: #d3517c;
-            --text-color: #3c3c3c;
-            --bg-color: #fef6f8;
-            --white-color: #ffffff;
-        }
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-        .login-container {
-            background: var(--white-color);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            animation: fadeIn 0.8s forwards;
-        }
-        h2 {
-            color: var(--primary-color);
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-        input:focus, select:focus {
-            border-color: var(--accent-color);
-            outline: none;
-        }
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.3s ease, transform 0.3s ease;
-            margin-bottom: 10px;
-        }
-        .login-btn {
-            background: var(--accent-color);
-            color: var(--white-color);
-        }
-        .register-btn {
-            background: var(--primary-color);
-            color: var(--white-color);
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-        .login-btn:hover {
-            background: var(--secondary-color);
-        }
-        .register-btn:hover {
-            background: var(--secondary-color);
-        }
-        .back-btn {
-            display: inline-block;
-            margin-top: 20px;
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s;
-        }
-        .back-btn:hover {
-            color: var(--secondary-color);
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <h2>Iniciar Sesión</h2>
-        <div class="input-group">
-            <label for="username">Nombre de Usuario:</label>
-            <input type="text" id="username" name="username" placeholder="Ingresa tu nombre" required>
-        </div>
-        <div class="input-group">
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" name="password" placeholder="Ingresa tu contraseña" required>
-        </div>
-        <div class="input-group">
-            <label for="user-type">Tipo de Usuario:</label>
-            <select id="user-type" name="user-type">
-                <option value="cliente">Cliente</option>
-                <option value="vendedor">Vendedor</option>
-            </select>
-        </div>
-        <button class="btn login-btn" onclick="login()">Iniciar Sesión</button>
-        <button class="btn register-btn" onclick="register()">Registrarse</button>
-        <a href="index.html" class="back-btn">Volver a la página principal</a>
-    </div>
-    <script>
-        async function login() {
-            const username = document.getElementById('username').value.trim().toLowerCase();
-            const password = document.getElementById('password').value.trim();
-            const userType = document.getElementById('user-type').value;
+<script>
+    const API = "/api";
 
-            if (username === '' || password === '') {
-                alert('Por favor, ingresa tu nombre de usuario y contraseña.');
-                return;
+    async function login() {
+        const username = document.getElementById('username').value.trim().toLowerCase();
+        const password = document.getElementById('password').value.trim();
+        const userType = document.getElementById('user-type').value;
+
+        if (username === '' || password === '') {
+            alert('Por favor, ingresa tu nombre de usuario y contraseña.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("username", data.user.username);
+                localStorage.setItem("userType", data.user.userType);
+                alert(`¡Bienvenido, ${data.user.username}!`);
+                window.location.href = "index.html";
+            } else {
+                alert(data.message);
             }
+        } catch (err) {
+            alert("Error al iniciar sesión.");
+            console.error(err);
+        }
+    }
 
-            // Lógica para el usuario vendedor único (ejemplo fijo)
-            if (userType === 'vendedor') {
-                if (username === 'vendedor' && password === '123') {
-                    sessionStorage.setItem('username', 'Vendedor');
-                    sessionStorage.setItem('userType', 'vendedor');
-                    alert('¡Bienvenido, Vendedor!');
-                    window.location.href = `index.html`;
-                } else {
-                    alert('Usuario o contraseña de vendedor incorrectos.');
-                }
-                return;
-            }
+    async function register() {
+        const username = document.getElementById('username').value.trim().toLowerCase();
+        const password = document.getElementById('password').value.trim();
+        const userType = document.getElementById('user-type').value;
 
-            // Lógica para el cliente, que ahora se comunica con el servidor
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    sessionStorage.setItem('username', data.user.username);
-                    sessionStorage.setItem('userType', data.user.userType);
-                    alert(`¡Bienvenido, ${data.user.username}!`);
-                    window.location.href = `index.html`;
-                } else {
-                    alert(data.message);
-                }
-            } catch (error) {
-                alert('Ocurrió un error al intentar iniciar sesión. Por favor, revisa la conexión.');
-                console.error('Error during login:', error);
-            }
+        if (username === '' || password === '') {
+            alert('Por favor, completa todos los campos.');
+            return;
         }
 
-        async function register() {
-            const username = document.getElementById('username').value.trim().toLowerCase();
-            const password = document.getElementById('password').value.trim();
-            const userType = document.getElementById('user-type').value;
+        try {
+            const response = await fetch(`${API}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, userType })
+            });
 
-            if (username === '' || password === '') {
-                alert('Por favor, ingresa un nombre de usuario y una contraseña para registrarte.');
-                return;
+            const data = await response.json();
+            if (response.ok) {
+                alert(`✅ Registro exitoso: ${data.user.username}`);
+                window.location.href = "sesion.html";
+            } else {
+                alert(data.message);
             }
-
-            if (userType === 'vendedor') {
-                alert('No se puede registrar como vendedor. Solo existe un usuario "Vendedor" predefinido.');
-                return;
-            }
-
-            // La lógica de registro se comunica con el servidor
-            try {
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password, userType })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    sessionStorage.setItem('username', data.user.username);
-                    sessionStorage.setItem('userType', data.user.userType);
-                    alert(`✅ ¡Registro exitoso! Bienvenido, ${data.user.username}. Ahora puedes navegar como cliente.`);
-                    window.location.href = `index.html`;
-                } else {
-                    alert(data.message);
-                }
-            } catch (error) {
-                alert('Ocurrió un error al registrarse. Por favor, revisa la conexión.');
-                console.error('Error during registration:', error);
-            }
+        } catch (err) {
+            alert("Error al registrarse.");
+            console.error(err);
         }
-    </script>
-</body>
-</html>
+    }
+</script>
