@@ -1,11 +1,29 @@
-require("dotenv").config(); // arriba del todo
-const port = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || "clave-secreta";
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const axios = require("axios");
 
-mongoose.connect(process.env.MONGO_URI, {
+const app = express();
+const port = process.env.PORT || 3000;
+
+// 👇 Leemos la clave y la URI directamente de process.env
+const JWT_SECRET = process.env.JWT_SECRET || "clave-secreta";
+const MONGO_URI = process.env.MONGO_URI;
+
+mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-});
+})
+.then(() => console.log("✅ Conectado a MongoDB Atlas"))
+.catch(err => console.error("❌ Error de conexión:", err.message));
+
+app.use(cors());
+app.use(express.json());
+
+// ... resto de tu código (modelos, endpoints, etc.)
+
 
 const express = require("express");
 const cors = require("cors");
