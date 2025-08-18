@@ -1,66 +1,169 @@
-<script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión / Registrarse - Mimi Art</title>
+  <style>
+    :root {
+      --primary-color: #c27a96;
+      --secondary-color: #5e212f;
+      --accent-color: #d3517c;
+      --text-color: #3c3c3c;
+      --bg-color: #fef6f8;
+      --white-color: #ffffff;
+    }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .login-container {
+      background: var(--white-color);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      color: var(--primary-color);
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    .input-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .login-btn {
+      background: var(--accent-color);
+      color: var(--white-color);
+    }
+    .register-btn {
+      background: var(--primary-color);
+      color: var(--white-color);
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .back-btn {
+      display: inline-block;
+      margin-top: 20px;
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Iniciar Sesión</h2>
+    <div class="input-group">
+      <label for="username">Usuario:</label>
+      <input type="text" id="username" placeholder="Ingresa tu nombre">
+    </div>
+    <div class="input-group">
+      <label for="password">Contraseña:</label>
+      <input type="password" id="password" placeholder="Ingresa tu contraseña">
+    </div>
+    <div class="input-group">
+      <label for="user-type">Tipo de Usuario:</label>
+      <select id="user-type">
+        <option value="cliente">Cliente</option>
+        <option value="vendedor">Vendedor</option>
+      </select>
+    </div>
+    <button class="btn login-btn" onclick="login()">Iniciar Sesión</button>
+    <button class="btn register-btn" onclick="register()">Registrarse</button>
+    <a href="index.html" class="back-btn">Volver</a>
+  </div>
+
+  <script>
     const API = "/api";
 
     async function login() {
-        const username = document.getElementById('username').value.trim().toLowerCase();
-        const password = document.getElementById('password').value.trim();
-        const userType = document.getElementById('user-type').value;
+      const username = document.getElementById('username').value.trim().toLowerCase();
+      const password = document.getElementById('password').value.trim();
 
-        if (username === '' || password === '') {
-            alert('Por favor, ingresa tu nombre de usuario y contraseña.');
-            return;
+      if (!username || !password) return alert("Completa todos los campos");
+
+      try {
+        const res = await fetch(`${API}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("username", data.user.username);
+          localStorage.setItem("userType", data.user.userType);
+          alert(`Bienvenido ${data.user.username}`);
+          window.location.href = "index.html";
+        } else {
+          alert(data.message);
         }
-
-        try {
-            const response = await fetch(`${API}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("username", data.user.username);
-                localStorage.setItem("userType", data.user.userType);
-                alert(`¡Bienvenido, ${data.user.username}!`);
-                window.location.href = "index.html";
-            } else {
-                alert(data.message);
-            }
-        } catch (err) {
-            alert("Error al iniciar sesión.");
-            console.error(err);
-        }
+      } catch (err) {
+        console.error(err);
+        alert("Error al iniciar sesión");
+      }
     }
 
     async function register() {
-        const username = document.getElementById('username').value.trim().toLowerCase();
-        const password = document.getElementById('password').value.trim();
-        const userType = document.getElementById('user-type').value;
+      const username = document.getElementById('username').value.trim().toLowerCase();
+      const password = document.getElementById('password').value.trim();
+      const userType = document.getElementById('user-type').value;
 
-        if (username === '' || password === '') {
-            alert('Por favor, completa todos los campos.');
-            return;
+      if (!username || !password) return alert("Completa todos los campos");
+
+      try {
+        const res = await fetch(`${API}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password, userType })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(`✅ Usuario registrado: ${data.user.username}`);
+          window.location.href = "sesion.html";
+        } else {
+          alert(data.message);
         }
-
-        try {
-            const response = await fetch(`${API}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, userType })
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                alert(`✅ Registro exitoso: ${data.user.username}`);
-                window.location.href = "sesion.html";
-            } else {
-                alert(data.message);
-            }
-        } catch (err) {
-            alert("Error al registrarse.");
-            console.error(err);
-        }
+      } catch (err) {
+        console.error(err);
+        alert("Error al registrarse");
+      }
     }
-</script>
+  </script>
+</body>
+</html>
